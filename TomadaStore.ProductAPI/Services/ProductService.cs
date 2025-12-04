@@ -7,16 +7,24 @@ namespace TomadaStore.ProductAPI.Services
     public class ProductService : IProductService
     {
         private readonly ILogger<ProductService> _logger;
-        private readonly IProductRepository productRepository;
+        private readonly IProductRepository _productRepository;
 
         public ProductService(ILogger<ProductService> logger, IProductRepository productRepository)
         {
             _logger = logger;
-            this.productRepository = productRepository;
+            _productRepository = productRepository;
         }
-        public Task CreateProductAsync(ProductRequestDTO productDto)
+        public async Task CreateProductAsync(ProductRequestDTO productDto)
         {
-            throw new NotImplementedException();
+            try
+            {
+                await _productRepository.CreateProductAsync(productDto);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Error");
+                throw;
+            }
         }
 
         public Task DeleteProductAsync(string id)
