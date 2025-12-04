@@ -7,15 +7,17 @@
         public string LastName { get; private set; }
         public string Email { get; private set; }
         public string? PhoneNumber { get; private set; }
-        public Customer(string firstName, string lastName, string email)
+        public bool Status { get; private set; }
+        public Customer(string firstName, string lastName, string email, bool status)
         {
             FirstName = firstName;
             LastName = lastName;
             Email = email;
+            Status = status;
         }
 
-        public Customer(string firstName, string lastName, string email, string? phoneNumber)
-                       : this(firstName, lastName, email)
+        public Customer(string firstName, string lastName, string email, bool status, string? phoneNumber)
+                       : this(firstName, lastName, email, status)
         {
             PhoneNumber = phoneNumber;
         }

@@ -42,24 +42,41 @@ namespace TomadaStore.CustomerAPI.Repository
             }
         }
 
-        public Task<CustomerResponseDTO> GetCustomerByIdAsync(int id)
+        public async Task<CustomerResponseDTO> GetCustomerByIdAsync(int id)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var insertSql = @"SELECT Id, FirstName, LastName, Email, PhoneNumber, Status
+                                    FROM Customers
+                                    WHERE Id = @CustomerId";
+                return await _connection.QueryFirstOrDefaultAsync<CustomerResponseDTO>(insertSql, new { CustomerId = id });
+            }
+            catch (SqlException e)
+            {
+               _logger.LogError($"Could not find {e.Message}");
+                throw new Exception(e.StackTrace);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Could not find {ex.Message}");
+                throw new Exception(ex.StackTrace);
+            }
         }
 
         public async Task InsertCustomerAsync(CustomerRequestDTO customer)
         {
             try
             {
-                var insertSql = @"INSERT INTO Customers (FirstName, LastName, Email, PhoneNumber)  
-                                  VALUES (@FirstName, @LastName, @Email, @PhoneNumber)";
+                var insertSql = @"INSERT INTO Customers (FirstName, LastName, Email, PhoneNumber, Status)  
+                                  VALUES (@FirstName, @LastName, @Email, @PhoneNumber, @Status)";
 
                 await _connection.ExecuteAsync(insertSql, new
                 {
                     customer.FirstName,
                     customer.LastName,
                     customer.Email,
-                    customer.PhoneNumber
+                    customer.PhoneNumber,
+                    customer.Status
                 });
             }
             catch (SqlException sqlEx)

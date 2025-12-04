@@ -52,9 +52,26 @@ namespace TomadaStore.CustomerAPI.Controllers.v1
 
                 return Problem(e.StackTrace);
             }
+        }
+        [HttpGet("{id}")]
 
+        public async Task<ActionResult<CustomerResponseDTO>> GetCustomerByIdAsync(int id)
+        {
+            try
+            {
+                var customer = await _customerService.GetCustomerByIdAsync(id);
 
-
+                if (customer is null)
+                {
+                    return NotFound();
+                }
+                return Ok(customer);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"{ex.Message}", ex);
+                return Problem($"{ex.Message}");
+            }
         }
     }
 }
