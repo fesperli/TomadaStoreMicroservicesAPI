@@ -1,4 +1,5 @@
-﻿using TomadaStore.Models.DTOs.Product;
+﻿using MongoDB.Bson;
+using TomadaStore.Models.DTOs.Product;
 using TomadaStore.ProductAPI.Repositories.Interfaces;
 using TomadaStore.ProductAPI.Services.Interfaces;
 
@@ -32,9 +33,17 @@ namespace TomadaStore.ProductAPI.Services
             throw new NotImplementedException();
         }
 
-        public Task<ProductResponseDTO> GetProductByIdAsync(string id)
+        public async Task<ProductResponseDTO> GetProductByIdAsync(ObjectId id)
         {
-            throw new NotImplementedException();
+            try
+            {
+                return await _productRepository.GetAllProductsAsync(id);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError("Error retriving product: " + e.Message);
+                throw;
+            }
         }
 
         public Task<List<ProductResponseDTO>> GetAllProductsAsync()
