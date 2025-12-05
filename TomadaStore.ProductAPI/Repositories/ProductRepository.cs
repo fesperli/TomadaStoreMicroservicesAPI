@@ -1,6 +1,8 @@
-﻿using MongoDB.Driver;
+﻿using MongoDB.Bson;
+using MongoDB.Driver;
 using System.Security.Cryptography.X509Certificates;
 using TomadaStore.CustomerAPI.Data;
+using TomadaStore.Models.DTOs.Category;
 using TomadaStore.Models.DTOs.Product;
 using TomadaStore.Models.Models;
 using TomadaStore.ProductAPI.Repositories.Interfaces;
@@ -24,22 +26,21 @@ namespace TomadaStore.ProductAPI.Repositories
         {
             try
             {
-                await _mongoCollection.InsertOneAsync(
-                 new Product
+                await _mongoCollection.InsertOneAsync(new Product
                 (
-                 productDTO.Name,
-                 productDTO.Description,
-                 productDTO.Price,
-                 new Category
-                 (
-                     productDTO.Category.Name,
-                     productDTO.Category.Description
-                     )
+                    productDTO.Name,
+                    productDTO.Description,
+                    productDTO.Price,
+                    new Category
+                    (
+                        productDTO.Category.Name,
+                        productDTO.Category.Description
+                    )
                 ));
             }
-            catch (Exception ex)
+            catch (Exception e)
             {
-                _logger.LogError("Error");
+                _logger.LogError("Error creating product: " + e.StackTrace);
                 throw;
             }
         }
@@ -47,6 +48,31 @@ namespace TomadaStore.ProductAPI.Repositories
         public Task<List<ProductResponseDTO>> GetAllProductsAsync()
         {
             throw new NotImplementedException();
+        }
+
+        public async Task<ProductResponseDTO> GetProductByIdAsync(ObjectId id)
+        {
+            try
+            {
+                return await _mongoCollection.Find(x => x.Id == id).Project(x => new ProductResponseDTO
+                {
+                    Id = x.Id.ToString(),
+                    Name = x.Name,
+                    Description = x.Description,
+                    Price = x.Price,
+                    Category = new CategoryResponseDTO
+                    {
+                        Id = x.Category.Id.ToString(),
+                        Name = x.Category.Name,
+                        Description = x.Category.Description,
+                    }
+                }).FirstOrDefaultAsync();
+            }
+            catch (Exception e)
+            {
+                _logger.LogError("Error retriving product: " + e.StackTrace);
+                throw;
+            }
         }
     }
 }

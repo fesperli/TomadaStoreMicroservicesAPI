@@ -5,10 +5,9 @@ namespace TomadaStore.ProductAPI.Repositories.Interfaces
 {
     public interface IProductRepository
     {
-        Task CreateProductAsync(ProductRequestDTO productDto);
+        Task CreateProductAsync(ProductRequestDTO productDTO);
         Task<List<ProductResponseDTO>> GetAllProductsAsync();
-
-        Task<ProductResponseDTO> GetAllProductsAsync(ObjectId id);
+        Task<ProductResponseDTO> GetProductByIdAsync(ObjectId id);
 
     }
 }

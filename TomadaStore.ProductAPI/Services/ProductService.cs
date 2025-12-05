@@ -37,7 +37,7 @@ namespace TomadaStore.ProductAPI.Services
         {
             try
             {
-                return await _productRepository.GetAllProductsAsync(id);
+                return await _productRepository.GetProductByIdAsync(id);
             }
             catch (Exception e)
             {
