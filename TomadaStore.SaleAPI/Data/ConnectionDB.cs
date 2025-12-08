@@ -10,7 +10,7 @@ namespace TomadaStore.SalesAPI.Data
         public readonly IMongoCollection<Sale> mongoCollection;
         public ConnectionDB(IOptions<MongoDBSettings> mongoDbSettings)
         {
-            MongoClient client = new(mongoDbSettings.Value.ConnectionURI);
+            MongoClient client = new MongoClient(mongoDbSettings.Value.ConnectionURI);
             IMongoDatabase database = client.GetDatabase(mongoDbSettings.Value.DataBaseName);
             mongoCollection = database.GetCollection<Sale>(mongoDbSettings.Value.CollectionName);
         }
