@@ -8,5 +8,6 @@ namespace TomadaStore.Models.DTOs.Sale
 {
     public class SaleResponseDTO
     {
+        public List<SaleItemDTO> Items { get; init; }
     }
 }

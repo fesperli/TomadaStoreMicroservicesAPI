@@ -23,6 +23,7 @@ namespace TomadaStore.Models.DTOs.Product
         public decimal Price { get; init; }
         [BsonElement("category")]
         public CategoryResponseDTO Category { get; init; }
-
+        
+        public int Quantity { get; init; }
     }
 }

@@ -23,6 +23,8 @@ namespace TomadaStore.Models.Models
         public decimal TotalPrice { get; private set; }
 
         public Sale() { }
+
+        [BsonConstructor]
         public Sale(ObjectId id, Customer customer, List<Product> products, DateTime saleDate, decimal totalPrice)
         {
             Id = id;

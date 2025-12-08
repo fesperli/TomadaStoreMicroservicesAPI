@@ -35,7 +35,8 @@ namespace TomadaStore.ProductAPI.Repositories
                     (
                         productDTO.Category.Name,
                         productDTO.Category.Description
-                    )
+                    ),
+                    productDTO.Quantity
                 ));
             }
             catch (Exception e)

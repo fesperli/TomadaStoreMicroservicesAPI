@@ -1,10 +1,10 @@
 ﻿using TomadaStore.Models.DTOs.Customer;
 using TomadaStore.Models.DTOs.Product;
 using TomadaStore.Models.DTOs.Sale;
+using TomadaStore.SaleAPI.Services.Interfaces.v1;
 using TomadaStore.SalesAPI.Repositories.Interfaces;
-using TomadaStore.SalesAPI.Services.Interfaces;
 
-namespace TomadaStore.SalesAPI.Services
+namespace TomadaStore.SaleAPI.Services.v1
 {
     public class SaleService : ISaleService
     {

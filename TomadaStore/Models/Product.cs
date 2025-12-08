@@ -36,13 +36,14 @@ namespace TomadaStore.Models.Models
             Quantity = quantity;
         }
 
-        public Product(string name, string description, decimal price, Category category)
+        public Product(string name, string description, decimal price, Category category, int quantity)
         {
             Id = ObjectId.GenerateNewId();
             Name = name;
             Description = description;
             Price = price;
             Category = category;
+            Quantity = quantity;
         }
     }
 }
