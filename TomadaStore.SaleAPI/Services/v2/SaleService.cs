@@ -3,17 +3,17 @@ using System.Text.Json;
 using TomadaStore.Models.DTOs.Customer;
 using TomadaStore.Models.DTOs.Product;
 using TomadaStore.Models.DTOs.Sale;
+using TomadaStore.Models.Models;
 using TomadaStore.SaleAPI.Services.Interfaces.v1;
+using TomadaStore.SaleAPI.Services.v2;
 using TomadaStore.SalesAPI.Repositories.Interfaces;
 
-namespace TomadaStore.SaleAPI.Services.v1
+namespace TomadaStore.SaleAPI.Services.v2
 {
     public class SaleService : ISaleService
     {
         private readonly ISaleRepository _saleRepository;
-
         private readonly ILogger<SaleService> _logger;
-
         private readonly HttpClient _httpClientProduct;
         private readonly HttpClient _httpClientCustomer;
 
@@ -24,11 +24,10 @@ namespace TomadaStore.SaleAPI.Services.v1
         {
             _saleRepository = saleRepository;
             _logger = logger;
-
             _httpClientCustomer = factory.CreateClient("CustomerAPI");
             _httpClientProduct = factory.CreateClient("ProductAPI");
         }
-
+        
         public async Task<SaleResponseDTO> CreateSaleAsync(int idCustomer, List<SaleItemDTO> itemsDTO)
         {
             var customer = await _httpClientCustomer.GetFromJsonAsync<CustomerResponseDTO>(idCustomer.ToString());
@@ -63,7 +62,7 @@ namespace TomadaStore.SaleAPI.Services.v1
 
             return new SaleResponseDTO
             {
-                Id = 0,
+                Id = 0, 
                 CustomerId = idCustomer,
                 Items = itemsDTO,
                 Status = "Enviado para fila"

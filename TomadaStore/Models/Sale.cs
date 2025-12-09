@@ -11,7 +11,7 @@ namespace TomadaStore.Models.Models
     public class Sale
     {
         [BsonId]
-        [BsonRepresentation(MongoDB.Bson.BsonType.ObjectId)]
+        [BsonRepresentation(BsonType.ObjectId)]
         public ObjectId Id { get; private set; }
         [BsonElement("customer")]
         public Customer Customer { get; private set; }  
@@ -21,6 +21,8 @@ namespace TomadaStore.Models.Models
         public DateTime SaleDate { get; private set; }
         [BsonElement("totalPrice")]
         public decimal TotalPrice { get; private set; }
+        [BsonElement("status")]
+        public string Status { get; private set; }
 
         public Sale() { }
 
@@ -32,15 +34,17 @@ namespace TomadaStore.Models.Models
             Products = products;
             SaleDate = saleDate;
             TotalPrice = totalPrice;
+            Status = "Pendente";
         }
 
-        public Sale(Customer customer, List<Product> products, decimal totalPrice)
+        public Sale(Customer customer, List<Product> products, decimal totalPrice, string status)
         {
             Id = ObjectId.GenerateNewId();
             Customer = customer;
             Products = products;
             SaleDate = DateTime.UtcNow;
             TotalPrice = totalPrice;
+            Status = status;
         }
     }
 

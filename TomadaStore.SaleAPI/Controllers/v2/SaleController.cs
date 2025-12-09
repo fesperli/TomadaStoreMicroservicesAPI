@@ -4,11 +4,11 @@ using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System.Text;
 using System.Threading.Channels;
+using TomadaStore.Models.DTOs.Customer;
 using TomadaStore.Models.DTOs.Sale;
-using TomadaStore.SaleAPI.Controllers.v1;
 using TomadaStore.SaleAPI.Services.Interfaces.v1;
 
-namespace TomadaStore.SaleAPI.Controllers
+namespace TomadaStore.SaleAPI.Controllers.v2
 {
     [Route("api/v2/[controller]")]
     [ApiController]
@@ -30,7 +30,7 @@ namespace TomadaStore.SaleAPI.Controllers
         {
             try
             {
-
+                var saleSave = await _saleService.CreateSaleAsync(sale.CustomerId, sale.Items);
                 using var connection = await _connectionFactory.CreateConnectionAsync();
                 using var channel = await connection.CreateChannelAsync();
 
@@ -40,17 +40,34 @@ namespace TomadaStore.SaleAPI.Controllers
                                      autoDelete: false,
                                      arguments: null);
 
-                var saleMessage = System.Text.Json.JsonSerializer.Serialize(sale);
+                var saleMessage = System.Text.Json.JsonSerializer.Serialize(saleSave);
                 var body = Encoding.UTF8.GetBytes(saleMessage);
 
                 await channel.BasicPublishAsync(exchange: string.Empty ,routingKey: "sales_queue", body: body);
 
                 _logger.LogInformation(" [x] Sent {0}", saleMessage);
-                return Ok("Sale queued successfully");
+                return Ok(saleSave);
             }
             catch (Exception e)
             {
-                return BadRequest(e.Message);
+                
+                return BadRequest($"ERRO DETALHADO: {e.ToString()}");
+            }
+        }
+        [HttpGet]
+        public async Task<ActionResult<List<SaleResponseDTO>>> GetAllSalesAsync()
+        {
+            try
+            {
+                var customers = await _saleService.GetAllSalesAsync();
+
+                return Ok(customers);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Error ocurred while retrivieng all sales" + e.Message);
+
+                return Problem(e.StackTrace);
             }
         }
 

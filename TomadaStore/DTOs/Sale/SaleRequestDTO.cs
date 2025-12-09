@@ -12,7 +12,7 @@ namespace TomadaStore.Models.DTOs.Sale
 {
     public class SaleRequestDTO
     {
-        [BsonElement("items")]
-        public List<SaleItemDTO> Items { get; init; }
+        public int CustomerId { get; init; }
+        public List<SaleItemDTO> Items { get; init; } = new();
     }
 }

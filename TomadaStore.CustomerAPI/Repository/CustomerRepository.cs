@@ -46,7 +46,7 @@ namespace TomadaStore.CustomerAPI.Repository
         {
             try
             {
-                var insertSql = @"SELECT Id, FirstName, LastName, Email, PhoneNumber, Status
+                var insertSql = @"SELECT Id, FirstName, LastName, Email, PhoneNumber
                                     FROM Customers
                                     WHERE Id = @CustomerId";
                 return await _connection.QueryFirstOrDefaultAsync<CustomerResponseDTO>(insertSql, new { CustomerId = id });
@@ -67,16 +67,15 @@ namespace TomadaStore.CustomerAPI.Repository
         {
             try
             {
-                var insertSql = @"INSERT INTO Customers (FirstName, LastName, Email, PhoneNumber, Status)  
-                                  VALUES (@FirstName, @LastName, @Email, @PhoneNumber, @Status)";
+                var insertSql = @"INSERT INTO Customers (FirstName, LastName, Email, PhoneNumber)  
+                                  VALUES (@FirstName, @LastName, @Email, @PhoneNumber)";
 
                 await _connection.ExecuteAsync(insertSql, new
                 {
                     customer.FirstName,
                     customer.LastName,
                     customer.Email,
-                    customer.PhoneNumber,
-                    customer.Status
+                    customer.PhoneNumber          
                 });
             }
             catch (SqlException sqlEx)

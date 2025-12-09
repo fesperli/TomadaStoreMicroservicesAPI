@@ -38,11 +38,17 @@ namespace TomadaStore.ProductAPI.Controllers.v1
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult> GetProductByIdAsync(ObjectId id)
+        public async Task<ActionResult> GetProductByIdAsync(string id)
         {
             try
             {
-                var product = await _productService.GetProductByIdAsync(id);
+                if (!ObjectId.TryParse(id, out ObjectId objectId))
+                {
+                    return BadRequest("O ID informado não é válido.");
+                }
+
+                var product = await _productService.GetProductByIdAsync(objectId);
+                if (product == null) return NotFound("Produto não encontrado.");
                 return Ok(product);
             }
             catch (Exception e)

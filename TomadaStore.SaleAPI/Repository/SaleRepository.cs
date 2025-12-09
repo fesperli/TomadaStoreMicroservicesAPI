@@ -15,106 +15,36 @@ namespace TomadaStore.SaleAPI.Repository
 
         private readonly IMongoCollection<Sale> _mongoCollection;
 
-        private readonly ConnectionDB _connection;
 
         public SaleRepository(
             ILogger<SaleRepository> logger,
-            ConnectionDB connection)
+            IConfiguration configuration)
         {
             _logger = logger;
-            _connection = connection;
-            _mongoCollection = connection.GetMongoCollection();
-        }
 
-        //public async Task CreateSaleAsync(
-        //    CustomerResponseDTO customerDTO,
-        //    ProductResponseDTO productDTO,
-        //    SaleRequestDTO sale)
-        //{
-        //    try
-        //    {
-        //        var products = new List<Product>();
+            var connectionString = configuration["MongoDBSettings:ConnectionURI"];
+            var databaseName = configuration["MongoDBSettings:DataBaseName"];
 
-        //        var category = new Category
-        //        (
-        //            new ObjectId(productDTO.Category.Id),
-        //            productDTO.Category.Name,
-        //            productDTO.Category.Description
-        //        );
-
-        //        var product = new Product
-        //        (
-        //            new ObjectId(productDTO.Id),
-        //            productDTO.Name,
-        //            productDTO.Description,
-        //            productDTO.Price,
-        //            category
-        //        );
-
-        //        products.Add(product);
-
-        //        var customer = new Customer
-        //        (
-        //            customerDTO.Id,
-        //            customerDTO.FirstName,
-        //            customerDTO.LastName,
-        //            customerDTO.Email,
-        //            customerDTO.PhoneNumber
-        //        );
-        //        await _mongoCollection.InsertOneAsync(new Sale
-        //        (
-        //            customer,
-        //            products,
-        //            productDTO.Price
-        //        ));
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        _logger.LogError($"Error creating sale: {ex.Message}");
-        //        throw;
-        //    }
-        //}
-        public async Task CreateSaleAsync(
-            CustomerResponseDTO customerDTO,
-            List<(ProductResponseDTO product,
-            int quantity)> items)
-        {
-            var products = new List<Product>();
-            decimal total = 0;
-
-            foreach (var (productDTO, quantity) in items)
+            if (string.IsNullOrEmpty(connectionString))
             {
-                var category = new Category(
-                    new ObjectId(productDTO.Category.Id),
-                    productDTO.Category.Name,
-                    productDTO.Category.Description
-                );
-
-                var product = new Product(
-                    new ObjectId(productDTO.Id),
-                    productDTO.Name,
-                    productDTO.Description,
-                    productDTO.Price,
-                    category,
-                    quantity
-                );
-
-                products.Add(product);
-
-                total += productDTO.Price * quantity;
+                throw new ArgumentNullException("MongoDB:ConnectionString", "A string de conexão não foi encontrada no appsettings.json!");
             }
 
-            var customer = new Customer(
-                customerDTO.Id,
-                customerDTO.FirstName,
-                customerDTO.LastName,
-                customerDTO.Email,
-                customerDTO.PhoneNumber
-            );
+            var client = new MongoClient(connectionString);
+            var database = client.GetDatabase(databaseName);
 
-            var sale = new Sale(customer, products, total);
+            _mongoCollection = database.GetCollection<Sale>("sales");
+        }
 
+
+
+        public async Task CreateSaleAsync(Sale sale)
+        {
             await _mongoCollection.InsertOneAsync(sale);
+        }
+      public async Task<List<Sale>> GetAllSalesAsync()
+        {
+            return await _mongoCollection.Find(s => true).ToListAsync();
         }
     }
 }

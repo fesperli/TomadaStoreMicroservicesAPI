@@ -31,9 +31,17 @@ namespace TomadaStore.CustomerAPI.Service
             }
         }
 
-        public Task<CustomerResponseDTO> GetCustomerByIdAsync(int id)
+        public async Task<CustomerResponseDTO> GetCustomerByIdAsync(int id)
         {
-            throw new NotImplementedException();
+            var customer = await _customerRepository.GetCustomerByIdAsync(id);
+            if (customer == null) return null;
+
+            return new CustomerResponseDTO
+            {
+                Id = customer.Id,
+                FirstName = customer.FirstName,
+                Email = customer.Email
+            };
         }
 
         public async Task InsertCustomerAsync(CustomerRequestDTO customer)

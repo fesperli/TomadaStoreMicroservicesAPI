@@ -6,7 +6,7 @@ using TomadaStore.Models.Models;
 
 namespace TomadaStore.CustomerAPI.Controllers.v1
 {
-    [Route("api/v1/[controller]")]
+    [Route("api/[controller]")]
     [ApiController]
     public class CustomerController : ControllerBase
     {
@@ -57,8 +57,7 @@ namespace TomadaStore.CustomerAPI.Controllers.v1
 
         public async Task<ActionResult<CustomerResponseDTO>> GetCustomerByIdAsync(int id)
         {
-            try
-            {
+            
                 var customer = await _customerService.GetCustomerByIdAsync(id);
 
                 if (customer is null)
@@ -66,12 +65,7 @@ namespace TomadaStore.CustomerAPI.Controllers.v1
                     return NotFound();
                 }
                 return Ok(customer);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"{ex.Message}", ex);
-                return Problem($"{ex.Message}");
-            }
+ 
         }
     }
 }
