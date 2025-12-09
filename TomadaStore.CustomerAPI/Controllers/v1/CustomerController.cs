@@ -6,7 +6,7 @@ using TomadaStore.Models.Models;
 
 namespace TomadaStore.CustomerAPI.Controllers.v1
 {
-    [Route("api/[controller]")]
+    [Route("api/v1/[controller]")]
     [ApiController]
     public class CustomerController : ControllerBase
     {

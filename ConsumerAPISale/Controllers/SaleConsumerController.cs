@@ -16,22 +16,28 @@ namespace ConsumerAPISale.Controllers
     public class SaleConsumerController : ControllerBase
     {
         private readonly ISaleRepository _repository;
+        private readonly ConnectionFactory _factory;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly IConfiguration _configuration;
-        private readonly ConnectionFactory _factory;
+        private readonly ILogger<SaleConsumerController> _logger;
 
-        public SaleConsumerController(ISaleRepository repository, IConfiguration configuration, ConnectionFactory connectionFactory, IHttpClientFactory httpClientFactory)
+        public SaleConsumerController(ISaleRepository repository, IConfiguration configuration, ConnectionFactory connectionFactory, IHttpClientFactory httpClientFactory, ILogger<SaleConsumerController> logger)
         {
             _repository = repository;
             _configuration = configuration;
             _factory = connectionFactory;
             _httpClientFactory = httpClientFactory;
+            _logger = logger;
         }
 
         [HttpPost("savequeue")]
         public async Task<IActionResult> SaveSaleFromQueueAsync()
         {
-
+            var optionsCase = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            };
+                
             try
             {
                 using var connection = await _factory.CreateConnectionAsync();
@@ -44,35 +50,62 @@ namespace ConsumerAPISale.Controllers
                 if (data == null) return Ok("empty queue");
 
                 var message = Encoding.UTF8.GetString(data.Body.ToArray());
-                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-                var vendaDto = JsonSerializer.Deserialize<ProcessSaleDTO>(message, options);
 
-                if (vendaDto != null)
+                ProcessSaleDTO? saleQueue = JsonSerializer.Deserialize<ProcessSaleDTO>(message, optionsCase);
+
+                if (saleQueue != null)
                 {
+                    var clientCustomer = _httpClientFactory.CreateClient("CustomerAPI");
+                    Customer? customer = null;
 
-                    var client = _httpClientFactory.CreateClient();
 
-                    var customerUrl = $"https://localhost:5001/api/Customer/{vendaDto.CustomerId}";
-                    var customer = await client.GetFromJsonAsync<Customer>(customerUrl);
+                }
 
+                ProcessSaleDTO? saleDTO = null;
+                try
+                {
+                    saleDTO = JsonSerializer.Deserialize<ProcessSaleDTO>(message, optionsCase);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError("JSON inválido recebido. Descartando mensagem.");
+                    await channel.BasicNackAsync(data.DeliveryTag, false, false);
+                    return BadRequest("JSON Inválido");
+                }
+                if (saleDTO != null)
+                {
+                    var clientCustomer = _httpClientFactory.CreateClient("CustomerAPI");
+                    Customer? customer = null;
+                    try
+                    {
+                        customer = await clientCustomer.GetFromJsonAsync<Customer>(saleDTO.CustomerId.ToString());
+                    }
+                    catch (HttpRequestException ex)
+                    {
+                        _logger.LogError($"{ex.Message}");
+                        await channel.BasicNackAsync(data.DeliveryTag, false, false);
+                        return NotFound($"{saleDTO.CustomerId}");
+                    }
+                    var clientProduct = _httpClientFactory.CreateClient("ProductAPI");
                     var productsList = new List<Product>();
 
-                    foreach (var itemDto in vendaDto.Items)
+                    foreach (var itemDTO in saleDTO.Items)
                     {
-                        var productUrl = $"https://localhost:6001/api/v1/Product/{itemDto.ProductId}";
-                        var product = await client.GetFromJsonAsync<Product>(productUrl);
-
-                        if (product != null)
+                        try
                         {
-                            productsList.Add(product);
+                            var product = await clientProduct.GetFromJsonAsync<Product>(itemDTO.ProductId);
+                            if (product != null) productsList.Add(product);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogWarning($"{itemDTO.ProductId}, {ex.Message}");
                         }
                     }
-
                     var novaVenda = new Sale(
-                        customer,
+                        customer!,
                         productsList,
-                        vendaDto.TotalPrice,
-                        status: vendaDto.Status!
+                        saleDTO.TotalPrice,
+                        status: saleDTO.Status!
                     );
 
                     await _repository.CreateSaleAsync(novaVenda);
@@ -81,15 +114,17 @@ namespace ConsumerAPISale.Controllers
 
                     return Ok(new { Msg = "Salvo com modelo antigo!", Id = novaVenda.Id });
                 }
-
-                await channel.BasicAckAsync(data.DeliveryTag, multiple: false);
-                return BadRequest("JSON inválido.");
-            }
-            catch (Exception ex)
+                return BadRequest("erro");
+            } catch (Exception ex)
             {
-                return StatusCode(500, ex.ToString());
+                _logger.LogError($"{ex.Message}");
+                return StatusCode(500, ex.Message);
             }
+
         }
+           
     }
 }
+
+
 

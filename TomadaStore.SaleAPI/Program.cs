@@ -22,43 +22,52 @@ builder.Services.AddSingleton<ConnectionDB>();
 builder.Services.AddScoped<ISaleService, TomadaStore.SaleAPI.Services.v1.SaleService>();
 builder.Services.AddScoped<ISaleRepository, SaleRepository>();
 
+builder.Services.AddScoped<ISaleService, TomadaStore.SaleAPI.Services.v1.SaleService>();
+builder.Services.AddScoped<ISaleRepository, SaleRepository>();
+
+// --- 4. Configuração dos HttpClients (API de Produtos e Clientes) ---
 var handler = new HttpClientHandler
 {
     ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
 };
+
+// Configuração ProductAPI
 builder.Services.AddHttpClient("ProductAPI", client =>
 {
-    var url = builder.Configuration["Services:ProductAPI"]
-              ?? throw new Exception("URL da ProductAPI não encontrada no appsettings.");
-    client.BaseAddress = new Uri(url);
-})
-.ConfigurePrimaryHttpMessageHandler(() => handler); 
+    var url = builder.Configuration["Services:ProductAPI"];
 
-builder.Services.AddHttpClient("CustomerAPI", client =>
-{
-    var url = builder.Configuration["Services:CustomerAPI"]
-              ?? throw new Exception("URL da CustomerAPI não encontrada no appsettings.");
+    if (string.IsNullOrEmpty(url))
+        throw new Exception("ERRO CRÍTICO: A configuração 'Services:ProductAPI' não foi encontrada no appsettings.json!");
+
+    if (!url.EndsWith("/")) url += "/";
+
     client.BaseAddress = new Uri(url);
 })
 .ConfigurePrimaryHttpMessageHandler(() => handler);
-builder.Services.AddHttpClient();
 
-builder.Services.AddHttpClient("ProductAPI", client =>
-{
-    client.BaseAddress = new Uri(builder.Configuration["Services:ProductAPI"]!);
-});
+// [ADICIONADO] Configuração CustomerAPI (Faltava isso!)
 builder.Services.AddHttpClient("CustomerAPI", client =>
 {
-    client.BaseAddress = new Uri(builder.Configuration["Services:CustomerAPI"]!);
-});
+    var url = builder.Configuration["Services:CustomerAPI"];
 
+    if (string.IsNullOrEmpty(url))
+        throw new Exception("ERRO CRÍTICO: A configuração 'Services:CustomerAPI' não foi encontrada no appsettings.json!");
+
+    if (!url.EndsWith("/")) url += "/";
+
+    client.BaseAddress = new Uri(url);
+})
+.ConfigurePrimaryHttpMessageHandler(() => handler);
+
+
+// --- 5. Configuração do RabbitMQ ---
 builder.Services.AddSingleton<ConnectionFactory>(sp =>
 {
     return new ConnectionFactory()
     {
-        HostName = "localhost", 
-         UserName = "guest",  
-         Password = "guest"   
+        HostName = "localhost",
+        UserName = "guest",
+        Password = "guest",
     };
 });
 var app = builder.Build();

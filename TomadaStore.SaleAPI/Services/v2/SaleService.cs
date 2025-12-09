@@ -14,8 +14,6 @@ namespace TomadaStore.SaleAPI.Services.v2
     {
         private readonly ISaleRepository _saleRepository;
         private readonly ILogger<SaleService> _logger;
-        private readonly HttpClient _httpClientProduct;
-        private readonly HttpClient _httpClientCustomer;
 
         public SaleService(
         ISaleRepository saleRepository,
@@ -24,18 +22,10 @@ namespace TomadaStore.SaleAPI.Services.v2
         {
             _saleRepository = saleRepository;
             _logger = logger;
-            _httpClientCustomer = factory.CreateClient("CustomerAPI");
-            _httpClientProduct = factory.CreateClient("ProductAPI");
         }
         
         public async Task<SaleResponseDTO> CreateSaleAsync(int idCustomer, List<SaleItemDTO> itemsDTO)
         {
-            var customer = await _httpClientCustomer.GetFromJsonAsync<CustomerResponseDTO>(idCustomer.ToString());
-
-            foreach (var item in itemsDTO)
-            {
-                await _httpClientProduct.GetFromJsonAsync<ProductResponseDTO>(item.ProductId);
-            }
 
             var vendaParaFila = new
             {
@@ -44,21 +34,30 @@ namespace TomadaStore.SaleAPI.Services.v2
                 Status = "Pendente Processamento"
             };
             var factory = new ConnectionFactory { HostName = "localhost" };
-            using var connection = await factory.CreateConnectionAsync();
-            using var channel = await connection.CreateChannelAsync();
 
-            await channel.QueueDeclareAsync(queue: "sales_queue",
-                                     durable: false,
-                                     exclusive: false,
-                                     autoDelete: false,
-                                     arguments: null);
+            try
+            {
+                using var connection = await factory.CreateConnectionAsync();
+                using var channel = await connection.CreateChannelAsync();
 
-            var message = JsonSerializer.Serialize(vendaParaFila);
-            var body = System.Text.Encoding.UTF8.GetBytes(message);
+                await channel.QueueDeclareAsync(queue: "sales_queue",
+                                         durable: false,
+                                         exclusive: false,
+                                         autoDelete: false,
+                                         arguments: null);
 
-            await channel.BasicPublishAsync(exchange: string.Empty,
-                                         routingKey: "sales_queue",
-                                         body: body);
+                var message = JsonSerializer.Serialize(vendaParaFila);
+                var body = System.Text.Encoding.UTF8.GetBytes(message);
+
+                await channel.BasicPublishAsync(exchange: string.Empty,
+                                             routingKey: "sales_queue",
+                                             body: body);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"{ex.Message}");
+                throw ex;
+            }
 
             return new SaleResponseDTO
             {

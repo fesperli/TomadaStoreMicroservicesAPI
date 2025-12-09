@@ -1,22 +1,23 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
+using System.Text.Json.Serialization;
 
 namespace TomadaStore.Models.Models
 {
     public class Customer
     {
-        [BsonElement("id")]
+        [JsonPropertyName("id")]
         public int Id { get; private set; }
 
-        [BsonElement("firstName")]
+        [JsonPropertyName("firstName")]
         public string FirstName { get; private set; }
 
-        [BsonElement("lastName")]
+        [JsonPropertyName("lastName")]
         public string LastName { get; private set; }
 
-        [BsonElement("email")]
+        [JsonPropertyName("email")]
         public string Email { get; private set; }
 
-        [BsonElement("phoneNumber")]
+        [JsonPropertyName("phoneNumber")]
         public string? PhoneNumber { get; private set; }
 
         public Customer() { }
